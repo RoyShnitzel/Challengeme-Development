@@ -1,0 +1,47 @@
+.shepherd-content {
+  background-color: rgb(30, 211, 196);
+  padding: 1rem;
+  box-shadow: 0 1rem 3rem rgba(#000, 0.4);
+  position: fixed;
+  z-index:10000;
+}
+button {
+  display: inline-block;
+  outline: none;
+  border: none;
+  padding: 1rem 2rem;
+  margin: 0 0.5rem;
+  background-color: rgb(71, 173, 233);
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.shepherd-text {
+  margin: 1rem 0;
+}
+
+.shepherd-header {
+  position: relative;
+}
+
+.shepherd-cancel-icon {
+  position: absolute;
+  right: 0;
+  top: 0;
+  padding: 0.5rem;
+  background: none;
+  color: red;
+  font-size: 2rem;
+  cursor: pointer;
+}
+
+.shepherd-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 0.5rem;
+}
+
+.shepherd-arrow {
+  color: aqua
+}
