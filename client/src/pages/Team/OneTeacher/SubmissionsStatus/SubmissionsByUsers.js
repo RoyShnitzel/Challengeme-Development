@@ -1,22 +1,23 @@
-import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
-import { makeStyles, withStyles } from "@material-ui/core/styles";
-import Box from "@material-ui/core/Box";
-import Collapse from "@material-ui/core/Collapse";
-import IconButton from "@material-ui/core/IconButton";
-import Table from "@material-ui/core/Table";
-import TableBody from "@material-ui/core/TableBody";
-import TableContainer from "@material-ui/core/TableContainer";
-import TableHead from "@material-ui/core/TableHead";
-import TableRow from "@material-ui/core/TableRow";
-import TableCell from "@material-ui/core/TableCell";
-import Typography from "@material-ui/core/Typography";
-import Paper from "@material-ui/core/Paper";
-import KeyboardArrowDownIcon from "@material-ui/icons/KeyboardArrowDown";
-import KeyboardArrowUpIcon from "@material-ui/icons/KeyboardArrowUp";
-import Loading from "../../../../components/Loading";
-import network from "../../../../services/network";
-import "../../../Admin/Admin.css";
+import React, { useEffect, useState } from 'react';
+import { useParams } from 'react-router-dom';
+import { makeStyles, withStyles } from '@material-ui/core/styles';
+import Box from '@material-ui/core/Box';
+import Button from '@material-ui/core/Button';
+import Collapse from '@material-ui/core/Collapse';
+import IconButton from '@material-ui/core/IconButton';
+import Table from '@material-ui/core/Table';
+import TableBody from '@material-ui/core/TableBody';
+import TableContainer from '@material-ui/core/TableContainer';
+import TableHead from '@material-ui/core/TableHead';
+import TableRow from '@material-ui/core/TableRow';
+import TableCell from '@material-ui/core/TableCell';
+import Typography from '@material-ui/core/Typography';
+import Paper from '@material-ui/core/Paper';
+import KeyboardArrowDownIcon from '@material-ui/icons/KeyboardArrowDown';
+import KeyboardArrowUpIcon from '@material-ui/icons/KeyboardArrowUp';
+import Loading from '../../../../components/Loading';
+import network from '../../../../services/network';
+import '../../../Admin/Admin.css';
 
 const StyledTableCell = withStyles((theme) => ({
   head: {
@@ -30,7 +31,7 @@ const StyledTableCell = withStyles((theme) => ({
 
 const StyledTableRow = withStyles((theme) => ({
   root: {
-    "&:nth-of-type(odd)": {
+    '&:nth-of-type(odd)': {
       backgroundColor: theme.palette.action.hover,
     },
   },
@@ -38,8 +39,8 @@ const StyledTableRow = withStyles((theme) => ({
 
 const useRowStyles = makeStyles({
   root: {
-    "& > *": {
-      borderBottom: "unset",
+    '& > *': {
+      borderBottom: 'unset',
     },
   },
 });
@@ -81,9 +82,9 @@ function Row(props) {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {row.Submissions &&
-                    row.Submissions.map((submission) => (
-                      <StyledTableRow key={submission.Challenge.name}>
+                  {row.Submissions
+                    && row.Submissions.map((submission) => (
+                      <StyledTableRow key={submission.id}>
                         <StyledTableCell component="th" scope="row">
                           {submission.Challenge.name}
                         </StyledTableCell>
@@ -93,11 +94,11 @@ function Row(props) {
                         <StyledTableCell color="secondary">
                           <div
                             style={
-                              submission.state === "SUCCESS"
-                                ? { color: "green" }
-                                : submission.state === "FAIL"
-                                  ? { color: "red" }
-                                  : { color: "black" }
+                              submission.state === 'SUCCESS'
+                                ? { color: 'green' }
+                                : submission.state === 'FAIL'
+                                  ? { color: 'red' }
+                                  : { color: 'black' }
                             }
                           >
                             {submission.state}
@@ -118,47 +119,54 @@ function Row(props) {
   );
 }
 
-const SubmissionsByUsers = () => {
+const SubmissionsByUsers = ({ darkMode }) => {
   const [data, setData] = useState([]);
+  const [last, setLast] = useState(false);
   const { id } = useParams();
 
   async function fetchData() {
-    const { data } = await network.get(`/api/v1/insights/teacher/users-submissions/${id}`);
+    const { data } = await network.get(`/api/v1/insights/teacher/users-submissions/${id}?onlyLast=${last}`);
     setData(data);
   }
+
+  const filteredLast = () => {
+    setLast((prev) => !prev);
+  };
 
   useEffect(() => {
     fetchData();
     // eslint-disable-next-line
-  }, []);
+  }, [last]);
 
   return (
-    <div className="generic-page">
-      <div className="align">
-        <h1>This is All The Submissions By Users Page</h1>
-
-        <TableContainer component={Paper}>
-          <Table aria-label="collapsible table">
-            <TableHead>
-              <TableRow>
-                <StyledTableCell />
-                <StyledTableCell color="secondary">User Name</StyledTableCell>
-                <StyledTableCell align="left">First Name</StyledTableCell>
-                <StyledTableCell align="left">Last Name</StyledTableCell>
-                <StyledTableCell align="left">Phone Number</StyledTableCell>
-                <StyledTableCell align="left">Email</StyledTableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {data.length > 0 ? (
-                data.map((user) => <Row key={user.userName} color="secondary" row={user} />)
-              ) : (
-                  <Loading />
-                )}
-            </TableBody>
-          </Table>
-        </TableContainer>
+    <div>
+      <div className="title-and-button">
+        <h2>This is All The Submissions By Users Page</h2>
+        <Button variant={darkMode ? 'contained' : 'outlined'} onClick={filteredLast}>
+          {last ? 'Show All' : 'Show Only Last'}
+        </Button>
       </div>
+      <TableContainer component={Paper}>
+        <Table aria-label="collapsible table">
+          <TableHead>
+            <TableRow>
+              <StyledTableCell />
+              <StyledTableCell color="secondary">User Name</StyledTableCell>
+              <StyledTableCell align="left">First Name</StyledTableCell>
+              <StyledTableCell align="left">Last Name</StyledTableCell>
+              <StyledTableCell align="left">Phone Number</StyledTableCell>
+              <StyledTableCell align="left">Email</StyledTableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {data.length > 0 ? (
+              data.map((user) => <Row key={user.userName} color="secondary" row={user} />)
+            ) : (
+              <Loading />
+            )}
+          </TableBody>
+        </Table>
+      </TableContainer>
     </div>
   );
 };

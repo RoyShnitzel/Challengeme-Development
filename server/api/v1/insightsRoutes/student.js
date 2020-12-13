@@ -1,32 +1,66 @@
 const insightStudentRouter = require('express').Router();
 const sequelize = require('sequelize');
 const { Op } = require('sequelize');
-const { Submission, Challenge, User } = require('../../../models');
+const checkAdmin = require('../../../middleware/checkAdmin');
+const { checkTeamPermission } = require('../../../middleware/checkTeamPermission');
+const { Filters } = require('../../../helpers');
+const {
+  Submission, Challenge, User, Team
+} = require('../../../models');
 
 // returns the 5 users with the most successful submissions
-insightStudentRouter.get('/top-users', async (req, res) => {
+insightStudentRouter.get('/top-user/:teamId', checkTeamPermission, async (req, res) => {
   try {
-    const topUsers = await Submission.findAll({
-      attributes: {
-        include: [
-          [sequelize.fn('COUNT', sequelize.col('user_id')), 'countSub'],
-        ],
+    const { teamId } = req.params;
+
+    // returns top 5 users and their successful submissions
+    const teamUsersTopSuccess1 = await Team.findOne({
+      where: {
+        id: teamId,
       },
-      include: {
-        model: User,
-        attributes: ['userName'],
-      },
-      where: { state: 'SUCCESS' },
-      group: ['user_id'],
-      order: [[sequelize.fn('COUNT', sequelize.col('user_id')), 'DESC']],
-      limit: 5,
+      include: [
+        {
+          model: User,
+          attributes: ['id', 'userName'],
+          through: {
+            where: {
+              permission: 'student',
+            },
+            attributes: [],
+          },
+          include: [
+            {
+              model: Submission,
+              where: {
+                state: ['SUCCESS'],
+              },
+            },
+          ],
+          order: [[Submission, 'createdAt', 'DESC']],
+        },
+      ],
     });
-    res.json(topUsers);
+
+    const formattedMembers = teamUsersTopSuccess1.Users.map((member) => {
+      const { success } = Filters.filterLastSubmissionPerChallenge(member.Submissions);
+      const { userName } = member;
+      return ({ success, userName });
+    });
+
+    formattedMember = formattedMembers.sort((a, b) => b.success - a.success);
+
+    res.json(formattedMember.splice(0, 5));
   } catch (error) {
     console.error(error);
     res.status(400).json({ message: 'Cannot process request' });
   }
 });
+
+insightStudentRouter.use(checkAdmin, (req, res, next) => {
+  next();
+});
+
+//= ==========Not in use==========================================//
 
 // returns the amount of successful and failed submissions from all submissions
 insightStudentRouter.get('/user-success', async (req, res) => {
@@ -144,5 +178,7 @@ insightStudentRouter.get('/unsolved-challenges', async (req, res) => {
     res.status(400).json({ message: 'Cannot process request' });
   }
 });
+
+//= ==============================================================//
 
 module.exports = insightStudentRouter;
